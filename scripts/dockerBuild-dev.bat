@@ -1,0 +1,1 @@
+docker build -t forecastinator-dev-image -f ./DOCKERFILE ./
