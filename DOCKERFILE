@@ -16,3 +16,5 @@ COPY requirements.txt src/
 RUN cd src && pip install -r requirements.txt
 
 RUN rm -f /user/bin/python && ln -s /usr/bin/python3 /usr/bin/python
+
+EXPOSE 8080
