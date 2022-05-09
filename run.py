@@ -7,6 +7,7 @@ import dash.dependencies as dd
 import base64
 import pandas as pd
 import io
+import forecastinator.models as m
 
 app = dash.Dash()
 
@@ -83,7 +84,7 @@ def upload_graph_update(contents,filename,dropdown_value,n):
         data = [scatter]
 
         if ctx.triggered[0]['prop_id'].split('.')[0] == 'reverse_button':
-            flipped = go.Scatter(x=df['day'],y=df[dropdown_value][::-1],mode='lines+markers')
+            flipped = go.Scatter(x=df['day'],y=m.reverse(df[dropdown_value]),mode='lines+markers')
             data.append(flipped)
 
         fig = go.Figure(data)
