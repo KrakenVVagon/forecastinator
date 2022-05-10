@@ -11,7 +11,7 @@ import forecastinator.models as m
 
 app = dash.Dash()
 
-h1_style = {
+title_style = {
         'textAlign':'center',
         'marginTop':40,
         'marginBottom':40
@@ -28,17 +28,64 @@ upload_style = {
         'margin':'10px'
         }
 
-heading = html.H1(id='H1',children='Testing Dash Application',style=h1_style)
-dropdown = dcc.Dropdown(id='dropdown')
+lower_style = {
+        'width':'49%',
+        'display': 'inline-block'
+        }
+
+# we need to break the page down into 3 different sections
+# an upper section with title, file selector and graph
+# a lower section with options for DAU forecasting
+# an adjacent lower section with options for total player forecasting
+
+page_title = html.H1(id='page_title',children='Forecastinator!',style=title_style)
 upload= dcc.Upload(
         id='upload_data',
         children=html.Div(['Drag and Drop or ',html.A('Select Files')]),
         style=upload_style,multiple=True
         )
-upload_graph = dcc.Graph(id='plot2')
-reverse_button = html.Button('Reverse it',id='reverse_button')
+graph = dcc.Graph(id='graph')
+upper_section = html.Div(id='upper_section',children=[page_title,upload,graph])
 
-app.layout = html.Div(id='parent',children=[heading,upload,dropdown,upload_graph,reverse_button])
+dau_button = html.Button('Predict DAU',id='dau_button')
+dau_datepicker = dcc.DatePickerRange(id='dau_datepicker',
+        display_format='DD/MM/YYYY',
+        start_date_placeholder_text='dd/mm/yyyy',
+        end_date_placeholder_text='dd/mm/yyyy'
+        )
+dau_xdropdown = dcc.Dropdown(id='dau_xdropdown')
+dau_ydropdown = dcc.Dropdown(id='dau_ydropdown')
+dau_title_text = html.H2(id='dau_title',children='DAU Forecasting',style=title_style)
+dau_date_text = dcc.Markdown('Select start/end dates')
+dau_x_text = dcc.Markdown('Select x axis variable')
+dau_y_text = dcc.Markdown('Select y axis variable')
+lower_section1 = html.Div(id='lower_section1',children=[
+    dau_title_text,
+    dau_date_text,
+    dau_datepicker,
+    dau_x_text,
+    dau_xdropdown,
+    dau_y_text,
+    dau_ydropdown,
+    dau_button],
+    style=lower_style)
+
+total_button = html.Button('Predict Total Players',id='total_button')
+total_xdropdown = dcc.Dropdown(id='total_xdropdown')
+total_ydropdown = dcc.Dropdown(id='total_ydropdown')
+total_title = html.H2(id='total_title',children='Total Player Forecasting',style=title_style)
+total_x_text = dcc.Markdown('Select x axis variable')
+total_y_text = dcc.Markdown('Select y axis variable')
+lower_section2 = html.Div(id='lower_section2',children=[
+    total_title,
+    total_x_text,
+    total_xdropdown,
+    total_y_text,
+    total_ydropdown,
+    total_button],
+    style=lower_style)
+
+app.layout = html.Div(id='parent',children=[upper_section,lower_section1,lower_section2])
 
 def parse_upload(contents,filename):
     content_type, content_string = contents.split(',')
@@ -53,7 +100,7 @@ def parse_upload(contents,filename):
         return df
 
     return html.Div(['There was an error processing this file.'])
-
+'''
 @app.callback([dd.Output('dropdown','options'),
          dd.Output('dropdown','value')],
         [dd.Input('upload_data','contents'),
@@ -97,6 +144,6 @@ def upload_graph_update(contents,filename,dropdown_value,n):
         return fig
     fig = go.Figure(go.Scatter(x=[],y=[]))
     return fig
-
+'''
 if __name__ == '__main__':
     app.run_server(debug=True,port=8080,host='0.0.0.0')
