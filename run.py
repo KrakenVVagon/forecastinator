@@ -9,6 +9,23 @@ import pandas as pd
 import io
 import forecastinator.models as m
 
+def make_traces(df,x=None):
+    '''
+    Plots all the columns of a dataframe as individual traces.
+    If x is provided use that as the xaxis value, otherwise default to first
+    '''
+    x = x or df.columns[0]
+    data = [go.Scatter(x=df[x],y=df[c],name=c) for c in df.columns if c != x]
+    return data
+
+def predict_total_players(df,x,y):
+    predict_df = df.copy()
+    return make_traces(predict_df,x=x)
+
+def predict_dau(df,x,y,start_date,end_date):
+    predict_df = df.copy()
+    return make_traces(predict_df,x=x)
+
 app = dash.Dash()
 
 title_style = {
@@ -142,10 +159,18 @@ def update_graph(contents,filename,dau_x,dau_y,dau_start,dau_end,total_x,total_y
         contents = contents[0]
         filename = filename[0]
         df = parse_upload(contents,filename)
-        data = [go.Scatter(x=[],y=[])]
+        trigger = ctx.triggered[0]['prop_id'].split('.')[0]
         
-        if ctx.triggered[0]['prop_id'].split('.')[0] == 'total_button':
-            print(dau_start,dau_end)
+        if trigger == 'total_button':
+            data = predict_total_players(df,total_x,total_y)
+        elif trigger == 'dau_button':
+            data = predict_dau(df,dau_x,dau_y,dau_start,dau_end)
+        elif trigger in ['dau_xdropdown','dau_ydropdown']:
+            data = make_traces(df,dau_x)
+        elif trigger in ['total_xdropdown','total_ydropdown']:
+            data = make_traces(df,total_x)
+        else:
+            data = make_traces(df)
 
         fig = go.Figure(data)
         fig.update_layout(
