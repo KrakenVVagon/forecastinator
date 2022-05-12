@@ -100,50 +100,63 @@ def parse_upload(contents,filename):
         return df
 
     return html.Div(['There was an error processing this file.'])
-'''
-@app.callback([dd.Output('dropdown','options'),
-         dd.Output('dropdown','value')],
-        [dd.Input('upload_data','contents'),
-         dd.Input('upload_data','filename')]
-        )
-def update_dropdown(contents,filename):
+
+# update x and y axis dropdowns from file upload
+@app.callback(
+    [dd.Output('dau_xdropdown','options'),
+    dd.Output('dau_xdropdown','value'),
+    dd.Output('dau_ydropdown','options'),
+    dd.Output('dau_ydropdown','value'),
+    dd.Output('total_xdropdown','options'),
+    dd.Output('total_xdropdown','value'),
+    dd.Output('total_ydropdown','options'),
+    dd.Output('total_ydropdown','value')],
+    [dd.Input('upload_data','contents'),
+    dd.Input('upload_data','filename')]
+    )
+def update_dropdowns(contents,filename):
     if contents:
         contents = contents[0]
         filename = filename[0]
         df = parse_upload(contents,filename)
-        return [{'label':i,'value':i} for i in df.columns], df.columns[0]
-    return [],''
+        return df.columns,df.columns[0],df.columns,df.columns[1],df.columns,df.columns[0],df.columns,df.columns[1]
+    return [],'',[],'',[],'',[],''
 
-@app.callback(dd.Output(component_id='plot2',component_property='figure'),
+# update graph based on input click & upload
+@app.callback(
+        dd.Output('graph','figure'),
         [dd.Input('upload_data','contents'),
-         dd.Input('upload_data','filename'),
-         dd.Input('dropdown','value'),
-         dd.Input('reverse_button','n_clicks')]
+        dd.Input('upload_data','filename'),
+        dd.Input('dau_xdropdown','value'),
+        dd.Input('dau_ydropdown','value'),
+        dd.Input('dau_datepicker','start_date'),
+        dd.Input('dau_datepicker','end_date'),
+        dd.Input('total_xdropdown','value'),
+        dd.Input('total_ydropdown','value'),
+        dd.Input('dau_button','n_clicks'),
+        dd.Input('total_button','n_clicks')]
         )
-def upload_graph_update(contents,filename,dropdown_value,n):
+def update_graph(contents,filename,dau_x,dau_y,dau_start,dau_end,total_x,total_y,dau_n,total_n):
     ctx = dash.callback_context
     if contents:
         contents = contents[0]
         filename = filename[0]
         df = parse_upload(contents,filename)
-
-        scatter = go.Scatter(x=df['day'],y=df[dropdown_value],mode='lines+markers')
-        data = [scatter]
-
-        if ctx.triggered[0]['prop_id'].split('.')[0] == 'reverse_button':
-            flipped = go.Scatter(x=df['day'],y=m.reverse(df[dropdown_value]),mode='lines+markers')
-            data.append(flipped)
+        data = [go.Scatter(x=[],y=[])]
+        
+        if ctx.triggered[0]['prop_id'].split('.')[0] == 'total_button':
+            print(dau_start,dau_end)
 
         fig = go.Figure(data)
-
         fig.update_layout(
-            title='Some Random Thing',
-            xaxis_title='Day',
-            yaxis_title=dropdown_value
-            )
+                title='',
+                xaxis_title='',
+                yaxis_title='',
+                )
+
         return fig
-    fig = go.Figure(go.Scatter(x=[],y=[]))
+    fig = go.Figure([go.Scatter(x=[],y=[])])
     return fig
-'''
+
 if __name__ == '__main__':
     app.run_server(debug=True,port=8080,host='0.0.0.0')
