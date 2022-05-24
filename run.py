@@ -6,8 +6,9 @@ import plotly.express as px
 import dash.dependencies as dd
 import base64
 import pandas as pd
+import numpy as np
 import io
-import forecastinator.models as m
+import forecastinator.models as fm
 
 def make_traces(df,x=None):
     '''
@@ -19,11 +20,42 @@ def make_traces(df,x=None):
     return data
 
 def predict_total_players(df,x,y):
+    '''
+    Returns a plot that has the total player prediction as a newly plotted trace.
+    No start or end is needed for this prediction since it assumes a number of days from the existing data
+    df : pandas df of data
+    x : xaxis column
+    y : column that should be predicted
+    '''
     predict_df = df.copy()
     return make_traces(predict_df,x=x)
 
 def predict_dau(df,x,y,start_date,end_date):
+    '''
+    Returns a plot with the DAU prediction as a trace
+    df : pandas df of data
+    x : xaxis column
+    y : column to be predicted
+    start_date : where the prediction should start
+    end_date : where the prediction should end
+    '''
     predict_df = df.copy()
+    predict_df.index = predict_df[x]
+    predict_df.sort_index(inplace=True)
+
+    predict_df.index.map(str)
+    predict_df.index = pd.to_datetime(predict_df.index)
+    predict_df.index = predict_df.index.strftime('%Y-%m-%d')
+
+    prediction_base = fm.TimeSeries(predict_df[y].loc[predict_df.index[0]:start_date])
+    prediction_time = fm.TimeSeries(predict_df[y].loc[start_date:end_date])
+
+    arima_model = prediction_base.create_arima_model(transform='meanshift',seasonal=True)
+    prediction = arima_model.predict(start_date,end_date,transform='lineartrend')
+
+    predict_df['predicted_dau'] = [np.nan]*len(predict_df)
+    predict_df.loc[start_date:end_date,'predicted_dau'] = prediction.values
+
     return make_traces(predict_df,x=x)
 
 app = dash.Dash()
@@ -66,9 +98,9 @@ upper_section = html.Div(id='upper_section',children=[page_title,upload,graph])
 
 dau_button = html.Button('Predict DAU',id='dau_button')
 dau_datepicker = dcc.DatePickerRange(id='dau_datepicker',
-        display_format='DD/MM/YYYY',
-        start_date_placeholder_text='dd/mm/yyyy',
-        end_date_placeholder_text='dd/mm/yyyy'
+        display_format='YYYY-MM-DD',
+        start_date_placeholder_text='yyyy-mm-dd',
+        end_date_placeholder_text='yyyy-mm-dd'
         )
 dau_xdropdown = dcc.Dropdown(id='dau_xdropdown')
 dau_ydropdown = dcc.Dropdown(id='dau_ydropdown')
